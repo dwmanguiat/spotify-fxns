@@ -1,14 +1,16 @@
 import requests
 import json
+from util import getConfig
 
-clientID = "f2d5518c716c40548eb55e289525bb1f"
-secrectKey = "9ec6fed8800540d4971c9444823e09c9"
+config = getConfig()
+
+
 tokenEndpoint = "https://accounts.spotify.com/api/token"
 playlistEndpoint = "https://api.spotify.com/v1/me/playlists"
 
 params= {
-    "client_id": clientID
-    ,"client_secret": secrectKey
+    "client_id": config["clientID"]
+    ,"client_secret": config["secrectKey"]
     ,"grant_type": "client_credentials"
 }
 
