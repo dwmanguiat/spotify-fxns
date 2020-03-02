@@ -33,6 +33,7 @@ def getTopNPlaylists(keywordParams, resultSize, tokenDict):
             resultDict[resultIndex] = {
                 "playlist_name": item["name"]
                 ,"playlist_owner": item["owner"]["display_name"]
+                ,"href": item["href"]
             }
             resultIndex += 1
 
@@ -41,14 +42,13 @@ def getTopNPlaylists(keywordParams, resultSize, tokenDict):
             # 
             resultCount = resultCount + len(responseJSON["playlists"]["items"])
             print(resultCount)
-            print("case1")
+
         if len(responseJSON["playlists"]["items"]) <= resultSize & callCount == 0:
             # procedure for a result smaller than requested on the first try:
             # exit loop
             break
         else: 
             resultCount = resultCount + len(responseJSON["playlists"]["items"])
-            print("case3")
 
         callCount += 1
         #TODO: add exit condition for small resultsets
@@ -60,8 +60,9 @@ def main():
     keys = config["Keys"]
     authToken = getCCFToken(keys)
 
-    playlists = getTopNPlaylists("Jazz Cigarettes", 60, authToken)
+    playlists = getTopNPlaylists("rainbow rock mountain", 60, authToken)
 
     print(pd.DataFrame(playlists).transpose())
+
 
 main()
