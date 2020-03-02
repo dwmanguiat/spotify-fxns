@@ -2,29 +2,66 @@ from util import getConfig
 from auth import getCCFToken
 import requests
 import json
+import pandas as pd
 
-config = getConfig()
-keys = config["Keys"]
-token = getCCFToken(keys)
+def getTopNPlaylists(keywordParams, resultSize, tokenDict):
+    #return list/dict/dataframe of the top N playlists with given search keywords
+    searchEndPoint = "https://api.spotify.com/v1/search"
+    resultCount = 0
+    resultDict = {}
+    resultIndex = 0
+    callCount = 0
 
-searchEndPoint = "https://api.spotify.com/v1/search"
-
-headerParams= {
-    "Authorization": "Bearer {}".format(token["access_token"])
+    headerParams= {
+    "Authorization": "Bearer {}".format(tokenDict["access_token"])
     }
 
-queryParams = {
-    "q" : "Jazz Cigarettes"
-    ,"type": "playlist"
-}
+    while resultCount < resultSize:
 
-r = requests.get(searchEndPoint, params=queryParams, headers=headerParams)
-respjson = json.loads(r.content)
+        queryParams = {
+            "q" : keywordParams
+            ,"type": "playlist"
+            ,"limit": 50
+            ,"offset": resultCount
+        }
 
+        response = requests.get(searchEndPoint, params=queryParams, headers=headerParams)
+        responseJSON = json.loads(response.content)
 
-#with open ("file.txt", "r+") as f:
-    #f.write(str(respjson))
+        #add response items to result dict
+        for item in responseJSON["playlists"]["items"]:
+            resultDict[resultIndex] = {
+                "playlist_name": item["name"]
+                ,"playlist_owner": item["owner"]["display_name"]
+            }
+            resultIndex += 1
 
+        if len(responseJSON["playlists"]["items"]) > resultSize:
+            # procedure for a result larger than requested:
+            # 
+            resultCount = resultCount + len(responseJSON["playlists"]["items"])
+            print(resultCount)
+            print("case1")
+        if len(responseJSON["playlists"]["items"]) <= resultSize & callCount == 0:
+            # procedure for a result smaller than requested on the first try:
+            # exit loop
+            break
+        else: 
+            resultCount = resultCount + len(responseJSON["playlists"]["items"])
+            print("case3")
 
-for line in respjson["playlists"]["items"]:
-    print("name: {}, owner: {}".format(line["name"], line["owner"]["display_name"]))
+        callCount += 1
+        #TODO: add exit condition for small resultsets
+
+    return resultDict
+
+def main():
+    config = getConfig()
+    keys = config["Keys"]
+    authToken = getCCFToken(keys)
+
+    playlists = getTopNPlaylists("Jazz Cigarettes", 60, authToken)
+
+    print(pd.DataFrame(playlists).transpose())
+
+main()
